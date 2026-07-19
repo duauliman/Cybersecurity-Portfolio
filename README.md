@@ -19,10 +19,6 @@ Security Academy, documenting each lab as I go. This repo is my working
 log — part study notes, part portfolio — showing how I approach finding,
 understanding, and exploiting real vulnerability classes.
 
-- 🔗 **LinkedIn:** [add your link]
-- 🔗 **Portfolio/site:** [add your link]
-- 📫 **Contact:** [add your email]
-
 ---
 
 ## Why this repo exists
